@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Get Join Link by Completing Task</title>
+
+<!-- Telegram WebApp SDK -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+:root {
+  --bg: #020617;
+  --card: #111827;
+  --border: #1f2937;
+  --primary: #38bdf8;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: linear-gradient(180deg, #020617, #020617);
+  color: var(--text);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 8px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.progress {
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+
+.task {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+  transition: all 0.25s ease;
+}
+
+.task.completed {
+  opacity: 0.75;
+  border-left: 4px solid var(--success);
+}
+
+.task h4 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.task a {
+  display: inline-block;
+  color: var(--primary);
+  text-decoration: none;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.task a:hover { text-decoration: underline; }
+
+input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #020617;
+  color: var(--text);
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  background: var(--primary);
+  color: #020617;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.badge {
+  display: inline-block;
+  background: rgba(34,197,94,0.15);
+  color: var(--success);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#reward {
+  display: none;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  padding: 20px;
+  border-radius: 16px;
+  margin-top: 24px;
+  text-align: center;
+  color: #022c22;
+}
+
+#reward h3 {
+  margin-bottom: 14px;
+  font-size: 20px;
+}
+
+#reward button {
+  background: #020617;
+  color: #22c55e;
+}
+</style>
+</head>
+
+<body>
+
+<h2> Complete All Tasks to Get Join Link</h2>
+<p>Watch the videos, and enter the codes. After completing all the tasks, you will get the join link, at the end.</p>
+<div class="progress" id="progress"></div>
+
+<div id="tasks"></div>
+
+<div id="reward">
+  <h3> All Tasks Completed</h3>
+  <a href="https://your-reward-link.com" target="_blank">
+    <button>Claim Reward</button>
+  </a>
+</div>
+
+<script>
+Telegram.WebApp.ready();
+
+const tasksData = [
+  { video: "https://youtube.com/video1", code: "ABC123" },
+  { video: "https://youtube.com/video2", code: "DEF456" },
+  { video: "https://youtube.com/video3", code: "GHI789" },
+  { video: "https://youtube.com/video4", code: "JKL111" },
+  { video: "https://youtube.com/video5", code: "MNO222" },
+  { video: "https://youtube.com/video6", code: "PQR333" },
+  { video: "https://youtube.com/video7", code: "STU444" },
+  { video: "https://youtube.com/video8", code: "VWX555" },
+  { video: "https://youtube.com/video9", code: "YZA666" },
+  { video: "https://youtube.com/video10", code: "BCD777" }
+];
+
+const tasksDiv = document.getElementById("tasks");
+const progressDiv = document.getElementById("progress");
+
+let completed = JSON.parse(localStorage.getItem("completedTasks")) || [];
+
+function render() {
+  tasksDiv.innerHTML = "";
+
+  tasksData.forEach((task, index) => {
+    const done = completed.includes(index);
+    const div = document.createElement("div");
+    div.className = "task" + (done ? " completed" : "");
+
+    div.innerHTML = `
+      <h4>Task ${index + 1}</h4>
+      <a href="${task.video}" target="_blank"> Watch Video</a>
+      ${
+        done
+          ? `<div class="badge">Completed</div>`
+          : `
+            <input type="text" placeholder="Enter code">
+            <button>Submit</button>
+            <div class="error"></div>
+          `
+      }
+    `;
+
+    if (!done) {
+      div.querySelector("button").onclick = () => {
+        const input = div.querySelector("input").value.trim();
+        if (input === task.code) {
+          completed.push(index);
+          localStorage.setItem("completedTasks", JSON.stringify(completed));
+          Telegram.WebApp.HapticFeedback.notificationOccurred("success");
+          render();
+        } else {
+          div.querySelector(".error").innerText = "Incorrect code";
+          Telegram.WebApp.HapticFeedback.notificationOccurred("error");
+        }
+      };
+    }
+
+    tasksDiv.appendChild(div);
+  });
+
+  progressDiv.innerText =
+    `Completed ${completed.length} / ${tasksData.length} tasks`;
+
+  if (completed.length === tasksData.length) {
+    document.getElementById("reward").style.display = "block";
+  }
+}
+
+render();
+</script>
+
+</body>
+</html>
